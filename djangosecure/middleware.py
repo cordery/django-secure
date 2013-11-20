@@ -36,6 +36,14 @@ class SecurityMiddleware(object):
             return HttpResponsePermanentRedirect(
                 "https://%s%s" % (host, request.get_full_path()))
 
+        #also redirect if https and in exclude list.
+        if (self.redirect and
+                request.is_secure() and
+                any(pattern.search(path) for pattern in self.redirect_exempt)):
+            host = self.redirect_host or request.get_host()
+            return HttpResponsePermanentRedirect(
+                "http://%s%s" % (host, request.get_full_path()))
+
 
     def process_response(self, request, response):
         if (self.frame_deny and
