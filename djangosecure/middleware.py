@@ -46,6 +46,10 @@ class SecurityMiddleware(object):
 
 
     def process_response(self, request, response):
+        path = request.path.lstrip("/")
+        if any(pattern.search(path) for pattern in self.redirect_exempt):
+            return response
+
         if (self.frame_deny and
                 not getattr(response, "_frame_deny_exempt", False) and
                 not 'x-frame-options' in response):
