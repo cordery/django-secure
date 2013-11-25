@@ -17,6 +17,8 @@ class SecurityMiddleware(object):
         self.proxy_ssl_header = conf.SECURE_PROXY_SSL_HEADER
         self.redirect_exempt = [
             re.compile(r) for r in conf.SECURE_REDIRECT_EXEMPT]
+        self.redirect_relative = [
+            re.compile(r) for r in conf.SECURE_REDIRECT_EXEMPT]
 
 
     def process_request(self, request):
@@ -28,6 +30,12 @@ class SecurityMiddleware(object):
                 request.is_secure = lambda: True
 
         path = request.path.lstrip("/")
+
+        #ignore protocol relative paths
+        if any(pattern.search(path) for pattern in self.redirect_relative):
+            return None
+
+        #redirect insecure requests to secure urls for paths not in exclude path
         if (self.redirect and
                 not request.is_secure() and
                 not any(pattern.search(path)
